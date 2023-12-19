@@ -1,53 +1,35 @@
-
-from flask import Flask, render_template,request
-
-import threading
-
-import paho.mqtt.client as mqtt
-
+from flask import Flask, render_template
+from requests import request
+import json
+import controller
 
 app = Flask(__name__)
 
-threadStarted=False
 
+#Serve dynamic pages
 
-@app.route('/hello', methods=['GET'])
-def helloWorld():
-    print("Hello world endpoint")
-    return "Hello World"
+@app.route('/')
+def static_page():
+    # Get the last state of all robots
+    rob1 = "READY-IDLE-STARVED"
+    rob2 = "READY-PROCESSING-EXECUTING"
+    return render_template('cover_page.html', rob1 = rob1, rob2 = rob2)
 
+@app.route('/dashboard', methods=['GET'])
+def dashboard():
+    nID = request.args.get('nID')
+    return render_template('dashboard.html')
 
-@app.route('/start', methods=['GET'])
-def startThreads():
-    print("Start threads attempt")
-    global threadStarted
-    if (threadStarted):
-        return "Threads have started already"
-    else:
-        threadStarted=True
-        #Mqtt
-        x = threading.Thread(target=startSubscription)
-        x.start()
+@app.route('/measurement-history', methods=['GET'])
+def measurement_history():
+    nID = request.args.get('nID')
+    return render_template('measurement.html')
 
-        return "Starting threads"
-
-#Mqtt on message
-def on_message(client, userdata, msg):
-    print ("Got some Mqtt message ")
-    print(msg.topic+" "+str(msg.payload))
-
-#Mqtt thread
-def startSubscription():
-    print("Mqtt subscription started....")
-    client = mqtt.Client()
-    client.on_message = on_message
-    client.connect("broker.mqttdashboard.com")
-    client.subscribe("ii22/node/#")#subscribe all nodes
-
-    rc = 0
-    while rc == 0:
-        rc = client.loop()
+@app.route('/event-history', methods=['GET'])
+def event_history():
+    nID = request.args.get('nID')
+    return render_template('event.html')
 
 
 if __name__ == '__main__':
-    app.run()
+    app.run(debug=True)
