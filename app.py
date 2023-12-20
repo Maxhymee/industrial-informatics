@@ -58,23 +58,29 @@ def dashboard():
     down_time = 0
     number_of_down = 0
     alarms = []
-    while len(data) > 1:
+    while len(data) > 0:
         date_format = "%Y-%m-%dT%H:%M:%S"
-        delta_time = int(datetime.strptime(data[1][1], date_format).timestamp()) - int(datetime.strptime(data[0][1], date_format).timestamp()) # time is the second argumment
-        if data[0][0] == "READY-IDLE-STARVED":
-            number_of_idle += 1
-            idle_time += delta_time
-            if delta_time > MAX_IDLE_TIME:
-                alarms.append(("IDLE", data[0][1])) #We report when we had a too long time in idle position
-        elif data[0][0] == "READY-PROCESSING-EXECUTING":
-            number_of_processing += 1
-            processing_time += delta_time 
-        else:
-            number_of_down += 1
-            down_time += delta_time
-            if delta_time > MAX_IDLE_TIME:
-                alarms.append(("DOWN", data[0][1])) #We report when we had a too long time in idle position
-        data.pop(0)
+        if len(data) == 1 : # Last data, we need to compare to the current time
+            delta_time = int(datetime.now().timestamp()) - int(datetime.strptime(data[0][1], date_format).timestamp()) # time is the second argumment
+            data.pop(0)
+        elif data[1][0]==data[0][0] :
+            data.pop(1) #remove the data from calculation if the robot is in the same state as before
+        else :
+            delta_time = int(datetime.strptime(data[1][1], date_format).timestamp()) - int(datetime.strptime(data[0][1], date_format).timestamp()) # time is the second argumment
+            if data[0][0] == "READY-IDLE-STARVED":
+                number_of_idle += 1
+                idle_time += delta_time
+                if delta_time > MAX_IDLE_TIME:
+                    alarms.append(("IDLE", data[0][1])) #We report when we had a too long time in idle position
+            elif data[0][0] == "READY-PROCESSING-EXECUTING":
+                number_of_processing += 1
+                processing_time += delta_time 
+            else:
+                number_of_down += 1
+                down_time += delta_time
+                if delta_time > MAX_IDLE_TIME:
+                    alarms.append(("DOWN", data[0][1])) #We report when we had a too long time in idle position
+            data.pop(0)
 
     total_time = idle_time + processing_time + down_time
     return render_template('dashboard.html', nID=nID, state = current_state, processing_perc = processing_time/total_time * 100, idle_perc = idle_time/total_time * 100, down_perc = down_time/total_time * 100, alarms = alarms)
@@ -85,22 +91,32 @@ def event_history():
     cursor = conn.cursor()
     cursor.execute("SELECT state, time, deviceId FROM DeviceStateHistory ORDER BY deviceId ASC, time ASC")
     data = cursor.fetchall()
-    if data!=[]:
-        current_state = data[0][0]
-    else:
-        current_state = None
 
     alarms = []
-    while len(data) > 1:
-        if data[0][2]==data[1][2]: #making sure the next message is from the same robot
-            delta_time = int(data[1][1].timestamp()) - int(data[0][1].timestamp()) # time is the second argumment
+    while len(data) > 0:
+        date_format = "%Y-%m-%dT%H:%M:%S"
+        if len(data) == 1 or data[0][2]!=data[1][2]: # if it is the last message from a robot  
+            delta_time = int(datetime.now().timestamp()) - int(datetime.strptime(data[0][1], date_format).timestamp()) # time is the second argumment
             if data[0][0] == "READY-IDLE-STARVED":
                 if delta_time > MAX_IDLE_TIME:
                     alarms.append((data[0][2], "IDLE", data[0][1])) #We report when we had a too long time in idle position
-        elif data[0][0] == "DOWN":
-            if delta_time > MAX_IDLE_TIME:
-                alarms.append((data[0][2], "DOWN", data[0][1])) #We report when we had a too long time in idle position
-        data.pop(0)
+            elif data[0][0] == "DOWN":
+                if delta_time > MAX_IDLE_TIME:
+                    alarms.append((data[0][2], "DOWN", data[0][1])) #We report when we had a too long time in idle position
+            data.pop(0)
+        
+        elif data[1][0]==data[0][0] :
+            data.pop(1) #remove the data from calculation if the robot is in the same state as before
+
+        else: #making sure the next message is from the same robot
+            delta_time = int(datetime.strptime(data[1][1], date_format).timestamp()) - int(datetime.strptime(data[0][1], date_format).timestamp()) # time is the second argumment
+            if data[0][0] == "READY-IDLE-STARVED":
+                if delta_time > MAX_IDLE_TIME:
+                    alarms.append((data[0][2], "IDLE", data[0][1])) #We report when we had a too long time in idle position
+            elif data[0][0] == "DOWN":
+                if delta_time > MAX_IDLE_TIME:
+                    alarms.append((data[0][2], "DOWN", data[0][1])) #We report when we had a too long time in idle position
+            data.pop(0)
     return render_template('alarms.html', alarms = alarms)
 
 if __name__ == '__main__':
