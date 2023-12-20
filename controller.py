@@ -36,4 +36,4 @@ def startSubscription():
 def on_message(client, userdata, msg):
     print("Got some Mqtt message ")
     print(msg.topic + " " + str(msg.payload))
-    model.archive_message(msg)
+    model.update_model(msg)
