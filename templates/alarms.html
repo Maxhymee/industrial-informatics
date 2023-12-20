@@ -147,64 +147,12 @@
 <body>
     <div class="header"></div>
     <div class="topnav">
-        <a href="/dashboard?nID={{nID}}">Dashboard</a>
-        <a href="/measurement-history?nID={{nID}}">Historical data</a>
-        <a href="/event-history?nID={{nID}}">Alarms&Events History</a>
+        <a href="/">General Dashboard</a>
+        <a href="/alarms-history?nID={{nID}}">Alarms History</a>
     </div>
     <div class="row">
-        <div class="leftcolumn">
-            <div class="card">
-                <h2>Robot 1 : {{ states['rob1'] }}</h2>
-            </div>
-            <div class="card">
-                <h2>Robot 2</h2>
-                <h2>Color-based state</h2>
-            </div>
-            <div class="card">
-                <h2>Robot 3</h2>
-                <h2>Color-based state</h2>
-            </div>
-            <div class="card">
-                <h2>Robot 4</h2>
-                <h2>Color-based state</h2>
-            </div>
-            <div class="card">
-                <h2>Robot 5</h2>
-                <h2>Color-based state</h2>
-            </div>
-            <div class="card">
-                <h2>Robot 6</h2>
-                <h2>Color-based state</h2>
-            </div>
-            <div class="card">
-                <h2>Robot 7</h2>
-                <h2>Color-based state</h2>
-            </div>
-            <div class="card">
-                <h2>Robot 8</h2>
-                <h2>Color-based state</h2>
-            </div>
-            <div class="card">
-                <h2>Robot 9</h2>
-                <h2>Color-based state</h2>
-            </div>
-            <div class="card">
-                <h2>Robot 10</h2>
-                <h2>Color-based state</h2>
-            </div>
-        </div>
-        <div class="rightcolumn">
-            <div class="card">
-                <h2>Current State</h2>
-                <div id="currentState" style="height:100px;">State</div>
-            </div>
-
-            <div class="card">
-                <h3>Last time connected</h3>
-                <div id="lastTimeConnected" style="height:100px;">lastTimeConnected</div>
-            </div>
-
-        </div>
+        <h2> List of all alarms</h2>
+        <h3> {{alarms}} </h3>
     </div>
     <script>
 
