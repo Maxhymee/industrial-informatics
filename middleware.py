@@ -12,7 +12,7 @@ robot_data_url = "http://broker.mqttdashboard.com:1883/ii23/telemetry"
 #function for publishing data from urls (http into mqtt)
 def on_message(client, userdata, msg):
     global mqtt_topic
-    r = requests.get(robot_data_url)
+    r = requests.get(msg.payload.decode('utf-8'))
     if r.status_code == 200:
         #data interpreting as json
         robot_data = r.json()
