@@ -1,10 +1,10 @@
 from flask import Flask, render_template
 from flask import request as flask_request
-from requests import request
+from datetime import datetime
 import sqlite3
 import controller
 
-DATABASE = ""
+DATABASE = "Assignment2.db"
 MAX_IDLE_TIME = 5
 MAX_DOWN_TIME = 3
 
@@ -17,7 +17,7 @@ def static_page():
     def query_for_robot(name):
         conn = sqlite3.connect(DATABASE)
         cursor = conn.cursor()
-        cursor.execute("SELECT state FROM robot WHERE deviceId = '{}' ORDER BY time DESC".format(name))
+        cursor.execute("SELECT state FROM DeviceStateHistory WHERE deviceId = '{}' ORDER BY time ASC".format(name))
         state = cursor.fetchone()
         if state:
             return state[0]
@@ -35,13 +35,15 @@ def static_page():
     rob10 = query_for_robot("rob10")
     return render_template('cover_page.html', rob1 = rob1, rob2 = rob2, rob3 = rob3, rob4 = rob4, rob5 = rob5, rob6 = rob6, rob7 = rob7, rob8 = rob8, rob9 = rob9, rob10 = rob10)
 
+
+
 @app.route('/dashboard', methods=['GET'])
 def dashboard():
     nID = flask_request.args.get('nID')
 
     conn = sqlite3.connect(DATABASE)
     cursor = conn.cursor()
-    cursor.execute("SELECT state, time FROM robot WHERE deviceId = 'rob{}' ORDER BY time DESC".format(nID))
+    cursor.execute("SELECT state, time FROM DeviceStateHistory WHERE deviceId = 'rob{}' ORDER BY time ASC".format(nID))
     data = cursor.fetchall()
     if data!=[]:
         current_state = data[0][0]
@@ -57,13 +59,14 @@ def dashboard():
     number_of_down = 0
     alarms = []
     while len(data) > 1:
-        delta_time = data[1][1] - data[0][1] # time is the second argumment
-        if data[0][0] == "READY-IDLE":
+        date_format = "%Y-%m-%dT%H:%M:%S"
+        delta_time = int(datetime.strptime(data[1][1], date_format).timestamp()) - int(datetime.strptime(data[0][1], date_format).timestamp()) # time is the second argumment
+        if data[0][0] == "READY-IDLE-STARVED":
             number_of_idle += 1
             idle_time += delta_time
             if delta_time > MAX_IDLE_TIME:
                 alarms.append(("IDLE", data[0][1])) #We report when we had a too long time in idle position
-        elif data[0][0] == "READY-PROCESSING-ACTIVE":
+        elif data[0][0] == "READY-PROCESSING-EXECUTING":
             number_of_processing += 1
             processing_time += delta_time 
         else:
@@ -80,7 +83,7 @@ def dashboard():
 def event_history():
     conn = sqlite3.connect(DATABASE)
     cursor = conn.cursor()
-    cursor.execute("SELECT state, time, deviceId FROM robot ORDER BY deviceId ASC, time DESC")
+    cursor.execute("SELECT state, time, deviceId FROM DeviceStateHistory ORDER BY deviceId ASC, time ASC")
     data = cursor.fetchall()
     if data!=[]:
         current_state = data[0][0]
@@ -90,8 +93,8 @@ def event_history():
     alarms = []
     while len(data) > 1:
         if data[0][2]==data[1][2]: #making sure the next message is from the same robot
-            delta_time = data[1][1] - data[0][1] # time is the second argumment
-            if data[0][0] == "READY-IDLE":
+            delta_time = int(data[1][1].timestamp()) - int(data[0][1].timestamp()) # time is the second argumment
+            if data[0][0] == "READY-IDLE-STARVED":
                 if delta_time > MAX_IDLE_TIME:
                     alarms.append((data[0][2], "IDLE", data[0][1])) #We report when we had a too long time in idle position
         elif data[0][0] == "DOWN":
