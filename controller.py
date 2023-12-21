@@ -24,7 +24,7 @@ def startSubscription():
     print("Mqtt subscription started....")
     client = mqtt.Client()
     client.on_message = on_message
-    client.connect("broker.mqttdashboard.com")
+    client.connect("mqtt-dashboard.com")
     client.subscribe("ii23/telemetry/#")  # subscribe all nodes
 
     rc = 0

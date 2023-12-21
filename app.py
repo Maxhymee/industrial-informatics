@@ -120,5 +120,5 @@ def event_history():
     return render_template('alarms.html', alarms = alarms)
 
 if __name__ == '__main__':
-    controller.startThreads
+    controller.startThreads()
     app.run(debug=True)

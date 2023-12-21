@@ -10,25 +10,30 @@ thresholds = {'DOWN': timedelta(minutes=2, seconds=0),
 
 
 def update_model(msg):
+    print("update_model function processing")
     # archive the MQTT message into the db
     data_str = msg.payload.decode('utf-8')
-    data_json = json.loads(data_str)
-    deviceId = data_json['deviceId']
-    state = data_json['state']
-    conn = sqlite3.connect('Assignment2.db')
-    c = conn.cursor()
-    c.execute("INSERT INTO DeviceStateHistory VALUES (:deviceId,:state, :time)",
-              {'deviceId': deviceId, 'state': state, 'time': data_json['time'][:19]})
-    conn.commit()
-    conn.close()
-    # stop and remove the previous monitoring thread if present
-    if deviceId in monitor_threads:
-        stop_flag = monitor_threads[deviceId][1]
-        stop_flag.set()  # Stop the previous monitoring thread
-        del monitor_threads[deviceId]
-    # create a new monitoring thread with the correct threshold if necessary
-    if state in ['DOWN', 'IDLE']:
-        monitor_robot_state(deviceId, state)
+    try:
+        data_json = json.loads(data_str)
+        deviceId = data_json['deviceId']
+        state = data_json['state']
+        conn = sqlite3.connect('Assignment2.db')
+        c = conn.cursor()
+        c.execute("INSERT INTO DeviceStateHistory VALUES (:deviceId,:state, :time)",
+                  {'deviceId': deviceId, 'state': state, 'time': data_json['time'][:19]})
+        conn.commit()
+        conn.close()
+        # stop and remove the previous monitoring thread if present
+        if deviceId in monitor_threads:
+            stop_flag = monitor_threads[deviceId][1]
+            stop_flag.set()  # Stop the previous monitoring thread
+            del monitor_threads[deviceId]
+        # create a new monitoring thread with the correct threshold if necessary
+        if state in ['DOWN', 'IDLE']:
+            monitor_robot_state(deviceId, state)
+    except json.decoder.JSONDecodeError as e:
+        print(f"Error decoding the JSON message: {e}")
+        return
 
 
 # Real-time
