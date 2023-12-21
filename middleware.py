@@ -25,29 +25,3 @@ def on_message(client, userdata, msg):
 
 
 subscribe.callback(on_message, topics=[(mqtt_topic, 0)], hostname="broker.mqttdashboard.com")
-
-
-#right broker? right QoS? Alternative way below?
-
-
-
-
-
-
-
-
-
-#alternativ Way:____________________
-
-#import paho.mqtt.subscribe as subscribe
-#import paho.mqtt.publish as publish
-#import json
-
-#MQTT-Topic
-#mqtt_topic = "ii23/telemetry"
-#function for publishing
-#def on_message(client, userdata, msg):
-    #Veröffentliche die empfangenen Daten als MQTT-Nachricht
-    #publish.single(mqtt_topic, msg.payload, hostname="broker.mqttdashboard.com")
-
-#subscribe.callback(on_message, topics=[(mqtt_topic, 0)], hostname="hivemq-server.com")
